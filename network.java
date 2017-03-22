@@ -94,8 +94,8 @@ public class network{
 //			passData(message, destination);
 			 corruptData(message, destination);
 		} else{
-			corruptData(message, destination);
-//			dropData(source);
+//			corruptData(message, destination);
+			dropData(source);
 		}
 	}
 
@@ -108,8 +108,11 @@ public class network{
 		// Create an ACK
 		ACK dropAck = new ACK((byte)2,(byte)0);
 		// Send the ack back to the sender
-		source.sendMessage(dropAck);
-		System.out.println(TAG + "Data was dropped enroute. Sending ACK(2) to: " + source.getLinkedClient());
+		// TODO only if sender
+		if(source == handlers[1]) {
+			source.sendMessage(dropAck);
+			System.out.println(TAG + "Data was dropped enroute. Sending ACK(2) to: " + source.getLinkedClient());
+		}
 	}
 
 
