@@ -89,7 +89,7 @@ public class receiver{
 		for(int i = 0; i < content.length(); i++){
 			checkSum += (int)content.charAt(i);
 		}
-		return checkSum == packet.getCheckSum();
+		return checkSum != packet.getCheckSum();
 	}
 
 	private static boolean unexpectedSequence(Packet packet){
