@@ -1,6 +1,6 @@
 /**
- * Used so that in the Handler we don't need to use instance of OR overload the functions passdata,
- * etc.. in <code>network</code>
+ * The <code>Message</code> interface provides polymorphism to passing data between
+ * <code>sender</code> and <code>receiver</code> without having to check for type.
  * Created by Michael on 3/21/17.
  */
 public interface Message {

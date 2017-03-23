@@ -4,11 +4,12 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
-* Reads the message file and converts it into many packetList.
-* Sends a packet to the Network and awaits a relayed ACK from the Receiver
-* NEEDS to be able to sendPacket a new packet or re-sendPacket the same packet according
-* to different network situations such as: PASS, CORRUPT, DROP (determined by ACK)
-*/
+ *
+ * Reads the message file and converts it into many packetList.
+ * Sends a packet to the Network and awaits a relayed ACK from the Receiver
+ * NEEDS to be able to sendPacket a new packet or re-sendPacket the same packet according
+ * to different network situations such as: PASS, CORRUPT, DROP (determined by ACK)
+ */
 // TODO add comments for currentPacket and lastpacket sequence and update syouts
 public class sender{
 	private static final String TAG = "Sender> ";
@@ -17,12 +18,9 @@ public class sender{
 	private static ObjectOutputStream outputStream;
 	private static int PORT;
 	private static String messageFileName;
-	private static File inputFile;
-	private static Scanner fileScanner;
 	private static ArrayList<Packet> packetList;
 	private static int currentPacket = 0;
 	private static int lastPacketSequence = 0;
-	private static int lastPacketReceived = 0;
 	private static boolean terminatingChar = false;
 
 	public static void main(String[] args){
@@ -45,7 +43,10 @@ public class sender{
 	}
 
 	private static void initPackets(String fileName) throws NullPointerException,FileNotFoundException{
+		File inputFile;
+		Scanner fileScanner;
 		int packetCount = 0;
+
 		// Check if theres a null pointer
 		if (messageFileName == null) throw new NullPointerException();
 
@@ -59,8 +60,8 @@ public class sender{
 		fileScanner = new Scanner(inputFile);
 		packetList = new ArrayList<>();
 		while (fileScanner.hasNext() || !terminatingChar){
-			// Check if there is a "."
 			String content = fileScanner.next();
+			// Check if there is a "."
 			if (content.contains(".")){
 				terminatingChar = true;
 				content = content.substring(0,content.length()-1);		// Remove the '.' from the word
@@ -87,34 +88,32 @@ public class sender{
 			inputStream = new ObjectInputStream(requestSocket.getInputStream());
 			outputStream = new ObjectOutputStream(requestSocket.getOutputStream());
 
-			// Send identifier
+			// Send identifier for debugging purposes
 			outputStream.writeObject(new String("Sender"));
+
 			while(true){ // last message hasn't been sent
 				try{
 					if (withinBounds()){
 //						System.out.println(TAG + "current packet: " + lastPacketSequence + " is within bounds");
 						outputStream.writeObject(packetList.get(currentPacket));
 						System.out.println("Sending packet: " + currentPacket);
-//						lastPacketSequence++;
-//						currentPacket++;
 					}
 
 					//TODO add check to see if last packet was received
 					response = (ACK)inputStream.readObject();
 					System.out.println(TAG + " " + response.toString());
 
+					// If the packet was properly received by the receiver
 					if (packetReceived(response)){
-						// update the lastreceived packet
+						// update the last packet that was received
 						System.out.println("Packet: " + lastPacketSequence + " was received");
 						lastPacketSequence = (lastPacketSequence + 1) % 2;
+						// update the index of the packetList
 						currentPacket++;
-//						System.out.println(TAG + "packet received! :D");
-					} else{ // packet not received set the lastPacketSequence to lastReceived
-						// Do nothing, the packet will be retransmitted
+					} else{	// The packet was not received
+						// Do nothing, the sender will retransmit the current packet
 						System.out.println(TAG + "packet not received :(");
 					}
-
-//					if ()
 				}catch(ClassNotFoundException notFound){
 					notFound.printStackTrace();
 				}
@@ -138,11 +137,7 @@ public class sender{
 		}
 	}
 
-	private static boolean test(ACK response){
-		// Check's if the correct packet was sent
-		return response.getChecksumValue() == 0;
-
-	}
+	// Checks if the packet was received by the "receiver"
 	private static boolean packetReceived(ACK response){
 //		System.out.println("lastpacketsent: " + lastPacketSequence + " ack#: " + response.getSequenceNumber());
 //		System.out.println("check sum of response: " + response.getChecksumValue());
@@ -151,35 +146,9 @@ public class sender{
 		return (lastPacketSequence == response.getSequenceNumber()) && (response.getChecksumValue() == 0);
 	}
 
+	// Checks if the index is a valid position
 	private static boolean withinBounds(){
-		System.out.println("current Packet: " + currentPacket +  " packetlist size: " + packetList.size());
+//		System.out.println("current Packet: " + currentPacket +  " packetlist size: " + packetList.size());
 		return currentPacket < packetList.size();
-	}
-
-	private static void sendMessage(){
-		// Packet packet = new Packet(...);
-		currentPacket++;
-	}
-
-	private static void recievePacket(Packet packet){
-		parseMessage(packet);
-		printPacket(packet);
-	}
-
-	private static void parseMessage(Packet packet){
-		// if DROP
-		// resend the packet
-
-	}
-
-	// Every time an ACK or DROP is received
-	private static void printPacket(Packet packet){
-		// Display: current state, total # of packets sent (incl. failure),
-		// packet received, proper action
-
-		// i.e.
-		// Waiting ACK0, 8, DROP, resend Packet()
-		// Waiting ACK0, 15, ACK0, no more packetList to sender
-		// Waiting ACK1, 120, ACK1, sendPacket Packet()
 	}
 }

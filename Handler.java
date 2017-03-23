@@ -27,7 +27,7 @@ public class Handler extends Thread{
 				while(true){
 					// Receive data from client
 					message = (Message) inputStream.readObject();
-					System.out.println(TAG +  "received: " + message.toString() + " from " + linkedClient);
+//					System.out.println(TAG +  "received: " + message.toString() + " from " + linkedClient);
 					passToNetwork(message);
 					sleep(500);
 				}
@@ -67,29 +67,3 @@ public class Handler extends Thread{
 		network.getInstance().sendToDestination(message,this);
 	}
 }
-
-
-
-//	private void passToNetwork(Packet packet){
-//		network.getInstance().sendToDestination(packet,this);
-//	}
-//
-//	private void passToNetwork(ACK ack){
-//		network.getInstance().sendToDestination(ack,this);
-//	}
-
-//	public void sendPacket(Packet packet){
-//		try{
-//			outputStream.writeObject(packet);
-//		}catch(Exception exception){
-//			exception.printStackTrace();
-//		}
-//	}
-//
-//	public void sendACK(ACK ack){
-//		try{
-//			outputStream.writeObject(ack);
-//		}catch(Exception exception){
-//			exception.printStackTrace();
-//		}
-//	}
