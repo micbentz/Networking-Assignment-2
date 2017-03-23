@@ -24,6 +24,11 @@ public class ACK implements Serializable, Message{
 	}
 
 	@Override
+	public ACK clone(){
+		return new ACK(sequenceNumber,checksumValue);
+	}
+
+	@Override
 	public String toString(){
 		String contents;
 		contents = "sequence number: " + sequenceNumber + '\t';

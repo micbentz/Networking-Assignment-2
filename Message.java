@@ -5,4 +5,5 @@
  */
 public interface Message {
 	public void corruptData();
+	public Message clone();
 }

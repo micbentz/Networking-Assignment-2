@@ -36,6 +36,15 @@ public class Packet implements Serializable, Message{
 	}
 
 	@Override
+	public Packet clone(){
+		return new Packet.PacketBuilder()
+				.sequenceNumber(this.sequenceNumber)
+				.ID(this.ID)
+				.content(this.content)
+				.build();
+	}
+
+	@Override
 	public String toString(){
 		String packetContents;
 		packetContents = "sequenceNumber: " + sequenceNumber + '\t';
