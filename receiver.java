@@ -12,7 +12,8 @@ public class receiver{
 	private static ObjectInputStream inputStream;
 	private static ObjectOutputStream outputStream;
 	private static int PORT;
-	private static int lastReceivedSequence = 0;
+	private static int lastPacketReceived = -1;
+	private static int expectedSequence = 0;
 
 	public static void main(String[] args){
 		try{
@@ -51,13 +52,24 @@ public class receiver{
 					}
 					System.out.println(TAG + " " + response.toString());
 
+					if(unexpectedSequence(response)){
+						System.out.println(TAG + "unexpected sequence");
+						System.out.println(TAG + "Expected: " + expectedSequence);
+						if (isCorrupt(response)){
+							System.out.println(TAG + "data is corrupted");
+						}
+					}
 					if (isCorrupt(response) || unexpectedSequence(response) ){
 						// Pass the ACK of the last received sequence
-						passAck(new ACK((byte)lastReceivedSequence,(byte)0));
-						System.out.println(TAG + "data is corrupted");
+						passAck(new ACK((byte) lastPacketReceived,(byte)0));
+//						System.out.println(TAG + "data is corrupted");
 					} else{
-						lastReceivedSequence = response.getSequenceNumber();
-						passAck(new ACK((byte)lastReceivedSequence,(byte)0));
+						// Update the last packet received
+						lastPacketReceived = response.getSequenceNumber();
+						// Send ACK
+						passAck(new ACK((byte) lastPacketReceived,(byte)0));
+						// Update the expectedSequence
+						expectedSequence = (expectedSequence + 1) % 2;
 						System.out.println(TAG + "data is intact");
 					}
 				}
@@ -93,7 +105,7 @@ public class receiver{
 	}
 
 	private static boolean unexpectedSequence(Packet packet){
-		return packet.getSequenceNumber() == lastReceivedSequence;
+		return packet.getSequenceNumber() != expectedSequence;
 	}
 
 	private static void passAck(ACK ack){

@@ -9,6 +9,7 @@ import java.util.Scanner;
 * NEEDS to be able to sendPacket a new packet or re-sendPacket the same packet according
 * to different network situations such as: PASS, CORRUPT, DROP (determined by ACK)
 */
+// TODO add comments for currentPacket and lastpacket sequence and update syouts
 public class sender{
 	private static final String TAG = "Sender> ";
 	private static InetAddress network;
@@ -19,8 +20,8 @@ public class sender{
 	private static File inputFile;
 	private static Scanner fileScanner;
 	private static ArrayList<Packet> packetList;
-	private static int packetsSent = 0;
 	private static int currentPacket = 0;
+	private static int lastPacketSequence = 0;
 	private static int lastPacketReceived = 0;
 	private static boolean terminatingChar = false;
 
@@ -44,6 +45,7 @@ public class sender{
 	}
 
 	private static void initPackets(String fileName) throws NullPointerException,FileNotFoundException{
+		int packetCount = 0;
 		// Check if theres a null pointer
 		if (messageFileName == null) throw new NullPointerException();
 
@@ -66,7 +68,7 @@ public class sender{
 
 			Packet packet = new Packet.PacketBuilder()
 					.sequenceNumber((byte)(packetList.size() % 2))	// either 0 or 1
-					.ID((byte)++packetsSent)						// ID of the packet
+					.ID((byte)++packetCount)						// ID of the packet
 					.content(content)								// Set the content as the next String
 					.build();
 			packetList.add(packet);									// Add the packet to the oacketList
@@ -90,15 +92,29 @@ public class sender{
 			while(true){ // last message hasn't been sent
 				try{
 					if (withinBounds()){
-//						System.out.println(TAG + "current packet: " + currentPacket + " is within bounds");
+//						System.out.println(TAG + "current packet: " + lastPacketSequence + " is within bounds");
 						outputStream.writeObject(packetList.get(currentPacket));
-						currentPacket++;
-						packetsSent++;
+						System.out.println("Sending packet: " + currentPacket);
+//						lastPacketSequence++;
+//						currentPacket++;
 					}
 
 					//TODO add check to see if last packet was received
 					response = (ACK)inputStream.readObject();
 					System.out.println(TAG + " " + response.toString());
+
+					if (packetReceived(response)){
+						// update the lastreceived packet
+						System.out.println("Packet: " + lastPacketSequence + " was received");
+						lastPacketSequence = (lastPacketSequence + 1) % 2;
+						currentPacket++;
+//						System.out.println(TAG + "packet received! :D");
+					} else{ // packet not received set the lastPacketSequence to lastReceived
+						// Do nothing, the packet will be retransmitted
+						System.out.println(TAG + "packet not received :(");
+					}
+
+//					if ()
 				}catch(ClassNotFoundException notFound){
 					notFound.printStackTrace();
 				}
@@ -122,17 +138,27 @@ public class sender{
 		}
 	}
 
-	private static boolean packetReceived(){
-		return currentPacket == lastPacketReceived;
+	private static boolean test(ACK response){
+		// Check's if the correct packet was sent
+		return response.getChecksumValue() == 0;
+
+	}
+	private static boolean packetReceived(ACK response){
+//		System.out.println("lastpacketsent: " + lastPacketSequence + " ack#: " + response.getSequenceNumber());
+//		System.out.println("check sum of response: " + response.getChecksumValue());
+
+		// If the right packet was received and if the packet wasn't dropped
+		return (lastPacketSequence == response.getSequenceNumber()) && (response.getChecksumValue() == 0);
 	}
 
 	private static boolean withinBounds(){
+		System.out.println("current Packet: " + currentPacket +  " packetlist size: " + packetList.size());
 		return currentPacket < packetList.size();
 	}
 
 	private static void sendMessage(){
 		// Packet packet = new Packet(...);
-		packetsSent++;
+		currentPacket++;
 	}
 
 	private static void recievePacket(Packet packet){
