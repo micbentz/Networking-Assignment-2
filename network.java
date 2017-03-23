@@ -79,6 +79,7 @@ public class network{
 	}
 
 	public void sendToDestination(Message message, Handler source){
+		System.out.println(TAG + "getting ready to send to destination");
 		// Get the destination
 		Handler destination = destinationMap.get(source);
 
@@ -94,8 +95,9 @@ public class network{
 //			passData(message, destination);
 			 corruptData(message, destination);
 		} else{
+//			passData(message,destination);
 //			corruptData(message, destination);
-			dropData(source);
+			dropData();
 		}
 	}
 
@@ -104,15 +106,16 @@ public class network{
 	* Use ACK2 for DROP message, i.e., ACK with seq# 2 to
 	* emulate a fake timeout
 	*/
-	public void dropData(Handler source){
+	public void dropData(){
+		Handler senderHandler = handlers[1];
 		// Create an ACK
 		ACK dropAck = new ACK((byte)2,(byte)0);
 		// Send the ack back to the sender
-		// TODO only if sender
-		if(source == handlers[1]) {
-			source.sendMessage(dropAck);
-			System.out.println(TAG + "Data was dropped enroute. Sending ACK(2) to: " + source.getLinkedClient());
-		}
+		senderHandler.sendMessage(dropAck);
+		System.out.println(TAG + "Data was dropped enroute. Sending ACK(2)");
+//		if(source == handlers[1]) {
+//			source.sendMessage(dropAck);
+//		}
 	}
 
 
@@ -128,10 +131,11 @@ public class network{
 	 * Add 1 to the checksum field
 	 */
 	public void corruptData(Message message, Handler destination){
+		// Clone the message so that it's original contents aren't changed
+		Message copy = message.clone();
 		// Corrupt the data
-		message.corruptData();
-		// Send the packet to the destination
-		destination.sendMessage(message);
+		copy.corruptData();
+		destination.sendMessage(copy);
 		System.out.println(TAG + "Corrupted the packet's data going to: " + destination.getLinkedClient());
 	}
 
