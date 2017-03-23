@@ -1,6 +1,6 @@
 import java.io.*;
 
-public class Packet implements Serializable, Message{
+public class Packet implements Serializable, Sendable {
 	private final String TAG = "Packet.class";
 	private byte sequenceNumber;	// 1 byte, either 0 or 1
 	private byte ID;				// 1 byte position of the packet in the message, starts at 1
@@ -30,6 +30,21 @@ public class Packet implements Serializable, Message{
 		return this.content;
 	}
 
+	public String info(){
+		String packetInfo;
+//		info = "sequenceNumber: " + sequenceNumber + ", ";
+//		info += "ID: " + ID + ", ";
+//		info += "checkSum: " + checkSum + ", ";
+//		info += "content: " + content;
+
+		packetInfo =  sequenceNumber + ", ";
+		packetInfo += ID + ", ";
+		packetInfo += checkSum + ", ";
+		packetInfo += content;
+
+		return packetInfo;
+	}
+
 	@Override
 	public void corruptData(){
 		this.checkSum++;
@@ -47,11 +62,6 @@ public class Packet implements Serializable, Message{
 	@Override
 	public String toString(){
 		String packetContents;
-//		packetContents = "sequenceNumber: " + sequenceNumber + '\t';
-//		packetContents += "ID: " + ID + '\t';
-//		packetContents += "checkSum: " + checkSum + '\t';
-//		packetContents += "content: " + content + '\t';
-
 		packetContents = "Packet" + sequenceNumber + ", " + ID + ", ";
 		return packetContents;
 	}

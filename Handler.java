@@ -7,7 +7,7 @@ public class Handler extends Thread{
 	private Socket connection;
 	private ObjectInputStream inputStream;
 	private ObjectOutputStream outputStream;
-	private Message message;
+	private Sendable sendable;
 
 
 	public Handler(Socket connection){
@@ -26,10 +26,9 @@ public class Handler extends Thread{
 				linkedClient = (String)inputStream.readObject();
 				while(true){
 					// Receive data from client
-					message = (Message) inputStream.readObject();
-//					System.out.println(TAG +  "received: " + message.toString() + " from " + linkedClient);
-					passToNetwork(message);
-					sleep(500);
+					sendable = (Sendable) inputStream.readObject();
+					passToNetwork(sendable);
+					sleep(1000);
 				}
 			}catch(Exception exception){
 				System.out.println(TAG + " could not connect with network");
@@ -55,15 +54,15 @@ public class Handler extends Thread{
 		return this.linkedClient;
 	}
 
-	public void sendMessage(Message message){
+	public void sendMessage(Sendable sendable){
 		try{
-			outputStream.writeObject(message);
+			outputStream.writeObject(sendable);
 		}catch(IOException ioException){
 
 		}
 	}
 
-	private void passToNetwork(Message message){
-		network.getInstance().sendToDestination(message,this);
+	private void passToNetwork(Sendable sendable){
+		network.getInstance().sendToDestination(sendable,this);
 	}
 }

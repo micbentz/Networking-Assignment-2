@@ -1,6 +1,6 @@
 import java.io.Serializable;
 
-public class ACK implements Serializable, Message{
+public class ACK implements Serializable, Sendable {
 	private final String TAG = "ACK.class";
 	private byte sequenceNumber;		// 1 byte
 	private byte checksumValue = 0;		// 1 byte, initially set to 0

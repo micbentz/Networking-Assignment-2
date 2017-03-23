@@ -79,10 +79,9 @@ public class network{
 		destinationMap.put(sender,receiver);
 	}
 
-	// Sends the message to the destination given the source Handler
-	// and chooses, at random, to: PASS, CORRUPT, or DROP the message.
-	public void sendToDestination(Message message, Handler source){
-//		System.out.println(TAG + "getting ready to send to destination");
+	// Sends the sendable to the destination given the source Handler
+	// and chooses, at random, to: PASS, CORRUPT, or DROP the sendable.
+	public void sendToDestination(Sendable sendable, Handler source){
 		// Get the destination
 		Handler destination = destinationMap.get(source);
 
@@ -92,15 +91,29 @@ public class network{
 
 		// Choose an operation
 		if (value <= .50){ // 50% probability to PASS
-			passData(message, destination);
-			printMessage(message,"PASS");
+			passData(sendable, destination);
+			printMessage(sendable,"PASS");
 		} else if (value <= .75){ // 25% probability to CORRUPT
-			 corruptData(message, destination);
-			 printMessage(message,"CORRUPT");
+			 corruptData(sendable, destination);
+			 printMessage(sendable,"CORRUPT");
 		} else{ // 25% probability to DROP
 			dropData();
-			printMessage(message,"DROP");
+			printMessage(sendable,"DROP");
 		}
+	}
+
+	// Passes the data to the destination handler
+	public void passData(Sendable sendable, Handler destination){
+		destination.sendMessage(sendable);
+	}
+
+	// Corrupts the data being passed by incrementing the checksum
+	public void corruptData(Sendable sendable, Handler destination){
+		// Clone the sendable so that it's original contents aren't changed
+		Sendable copy = sendable.clone();
+		// Corrupt the data
+		copy.corruptData();
+		destination.sendMessage(copy);
 	}
 
 	// Drops the message and sends ACK2 to the Sender Handler
@@ -110,30 +123,11 @@ public class network{
 		ACK dropAck = new ACK((byte)2,(byte)0);
 		// Send the ack back to the sender
 		senderHandler.sendMessage(dropAck);
-//		System.out.println(TAG + "Data was dropped enroute. Sending ACK(2)");
 	}
 
-
-	// Passes the data to the destination handler
-	public void passData(Message message, Handler destination){
-		destination.sendMessage(message);
-//		System.out.println(TAG + "Sending packet to: " + destination.getLinkedClient());
-	}
-
-	// Corrupts the data being passed by incrementing the checksum
-	public void corruptData(Message message, Handler destination){
-		// Clone the message so that it's original contents aren't changed
-		Message copy = message.clone();
-		// Corrupt the data
-		copy.corruptData();
-		destination.sendMessage(copy);
-//		System.out.println(TAG + "Corrupted the packet's data going to: " + destination.getLinkedClient());
-	}
-
-
-	// Prints the message being sent and the corresponding
-	// operation taken on the message
-	private void printMessage(Message message, String operation){
-		System.out.println(message.toString() + operation);
+	// Prints the sendable being sent and the corresponding
+	// operation taken on the sendable
+	private void printMessage(Sendable sendable, String operation){
+		System.out.println("Received: " + sendable.toString() + operation);
 	}
 }
