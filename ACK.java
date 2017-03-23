@@ -31,8 +31,10 @@ public class ACK implements Serializable, Message{
 	@Override
 	public String toString(){
 		String contents;
-		contents = "sequence number: " + sequenceNumber + '\t';
-		contents += "checksumValue: " + checksumValue + '\t';
+//		contents = "sequence number: " + sequenceNumber + '\t';
+//		contents += "checksumValue: " + checksumValue + '\t';
+
+		contents = "ACK" + sequenceNumber + ", ";
 		return contents;
 	}
 }

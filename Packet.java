@@ -47,10 +47,12 @@ public class Packet implements Serializable, Message{
 	@Override
 	public String toString(){
 		String packetContents;
-		packetContents = "sequenceNumber: " + sequenceNumber + '\t';
-		packetContents += "ID: " + ID + '\t';
-		packetContents += "checkSum: " + checkSum + '\t';
-		packetContents += "content: " + content + '\t';
+//		packetContents = "sequenceNumber: " + sequenceNumber + '\t';
+//		packetContents += "ID: " + ID + '\t';
+//		packetContents += "checkSum: " + checkSum + '\t';
+//		packetContents += "content: " + content + '\t';
+
+		packetContents = "Packet" + sequenceNumber + ", " + ID + ", ";
 		return packetContents;
 	}
 
