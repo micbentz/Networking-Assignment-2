@@ -29,6 +29,7 @@ public class Handler extends Thread{
 					message = (Message) inputStream.readObject();
 					System.out.println(TAG +  "received: " + message.toString() + " from " + linkedClient);
 					passToNetwork(message);
+					sleep(500);
 				}
 			}catch(Exception exception){
 				System.out.println(TAG + " could not connect with network");
