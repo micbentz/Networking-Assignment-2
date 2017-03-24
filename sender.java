@@ -22,8 +22,8 @@ private static final String TAG = "Sender> ";			// Tag used for debugging
 	private static int totalPacketsSent = 0;			// The total number of packets sent
 	private static boolean terminatingChar = false;		// Terminating char '.' (Assignment requirement)
 	private static boolean lastMessageSent = false;		// True if all packets have been sent successfully
-	private static HashMap<Integer,String> packetMap;
-	private static String actionTaken;
+	private static HashMap<Integer,String> packetMap;	// Mapping of output message for corresponding ACK
+	private static String actionTaken;					// Holds the message taken by sender
 
 
 	public static void main(String[] args){
@@ -32,6 +32,8 @@ private static final String TAG = "Sender> ";			// Tag used for debugging
 			PORT = Integer.parseInt(args[1]);			// Get the port number
 			String messageFileName = args[2];			// Get the file name
 			initPackets(messageFileName);				// Initialize packets given file
+
+			// Initialize and populate the map
 			packetMap = new HashMap<>();
 			packetMap.put(0,"ACK0");
 			packetMap.put(1,"ACK1");
@@ -55,26 +57,14 @@ private static final String TAG = "Sender> ";			// Tag used for debugging
 		Scanner fileScanner;
 		int packetCount = 0;
 
-		// Check if theres a null pointer
-		if (fileName == null) throw new NullPointerException();
+		if (fileName == null) throw new NullPointerException();		// Check if there's a null pointer
+		inputFile = new File(fileName);								// Get the file to read from
+		if(!inputFile.exists()) throw new FileNotFoundException();	// Check if the file exists
+		fileScanner = new Scanner(inputFile);						// Create scanner given the file
 
-		// Get the file to read from
-		inputFile = new File(fileName);
-
-		// Check if the file exists
-		if(!inputFile.exists()) throw new FileNotFoundException();
-
-		// Create scanner given the file
-		fileScanner = new Scanner(inputFile);
-		packetList = new ArrayList<>();
-		while (fileScanner.hasNext()){  //|| !terminatingChar){
-			String content = fileScanner.next();
-			// TODO check if we need
-			// Check if there is a "."
-//			if (content.contains(".")){
-//				terminatingChar = true;
-//				content = content.substring(0,content.length()-1);		// Remove the '.' from the word
-//			}
+		packetList = new ArrayList<>();								// Create list to hold packets
+		while (fileScanner.hasNext()){
+			String content = fileScanner.next();					// Get the next String
 
 			// Create the packet
 			Packet packet = new Packet.PacketBuilder()
@@ -83,7 +73,6 @@ private static final String TAG = "Sender> ";			// Tag used for debugging
 					.content(content)								// Set the content as the next String
 					.build();
 			packetList.add(packet);									// Add the packet to the oacketList
-			System.out.println(TAG + "created packet: " + packet.info());
 		}
 	}
 
@@ -106,27 +95,29 @@ private static final String TAG = "Sender> ";			// Tag used for debugging
 			outputStream.writeObject(new String("Sender"));
 
 			// While the last message hasnt been sent
-			while(!lastMessageSent){ // last message hasn't been sent
+			while(!lastMessageSent){
 				try{
+					// There are still packets to be sent
 					if (withinBounds()){
-						outputStream.writeObject(packetList.get(currentPacket));
-						ack = (ACK)inputStream.readObject();
+						outputStream.writeObject(packetList.get(currentPacket));	// Send packet to Handler
+						ack = (ACK)inputStream.readObject();						// Read the ACK
 						sequenceNum = ack.getSequenceNumber();
 						totalPacketsSent++;
+
 						// If the packet was properly received by the receiver
 						if (packetReceived(ack)){
-							lastPacketSequence = (lastPacketSequence + 1) % 2;		// update the last packet that was received
-							actionTaken = "send Packet" + lastPacketSequence;		// Update the action for printing purposes
-							currentPacket++;										// update the index of the packetList
-						} else{	// The packet was not received
-							// Do nothing, the sender will retransmit the current packet
-							actionTaken = "resend Packet" + lastPacketSequence;
+							currentPacket++;										// Update the index of the packetList
+							if (withinBounds()){									// Need to check again because index was updated
+								lastPacketSequence = (lastPacketSequence + 1) % 2;	// Update the last packet that was received
+								actionTaken = "send Packet" + lastPacketSequence;	// Update the action
+							}
+						} else{														// The packet was not received
+							actionTaken = "resend Packet" + lastPacketSequence;		// Do nothing, the sender will retransmit the current packet
 						}
-					} else{
+					} else{ // There are no more packets left to be sent
 						lastMessageSent = true;
-						actionTaken = "no more packets to send";
-						// Send termination message
-						outputStream.writeObject(-1);
+						actionTaken = "no more packets to send";					// Update the action
+						outputStream.writeObject((byte)-1);							// Send termination message
 					}
 					System.out.println("Waiting: ACK" + lastPacketSequence + ", " + totalPacketsSent + ", " +  packetMap.get(sequenceNum) + ", " + actionTaken);
 				}catch(ClassNotFoundException notFound){
@@ -154,15 +145,12 @@ private static final String TAG = "Sender> ";			// Tag used for debugging
 
 	// Checks if the packet was received by the "receiver"
 	private static boolean packetReceived(ACK ack){
-//		System.out.println("lastpacketsent: " + lastPacketSequence + " ack#: " + response.getSequenceNumber());
-//		System.out.println("check sum of response: " + response.getChecksumValue());
 		// If the right packet was received and if the packet wasn't dropped
 		return (lastPacketSequence == ack.getSequenceNumber()) && (ack.getChecksumValue() == 0);
 	}
 
 	// Checks if the index is a valid position
 	private static boolean withinBounds(){
-//		System.out.println("current Packet: " + currentPacket +  " packetlist size: " + packetList.size());
 		return currentPacket < packetList.size();
 	}
 }

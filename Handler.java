@@ -8,6 +8,7 @@ public class Handler extends Thread{
 	private ObjectInputStream inputStream;
 	private ObjectOutputStream outputStream;
 	private Sendable sendable;
+	private boolean done = false;
 
 
 	public Handler(Socket connection){
@@ -20,23 +21,32 @@ public class Handler extends Thread{
 			outputStream = new ObjectOutputStream(connection.getOutputStream());
 			outputStream.flush();
 			inputStream = new ObjectInputStream(connection.getInputStream());
-
-			try{
+//			try{
 				// Read the linkedClient
-				linkedClient = (String)inputStream.readObject();
-				while(true){
-					// Receive data from client
-					sendable = (Sendable) inputStream.readObject();
+			linkedClient = (String)inputStream.readObject();
+//			}catch(Exception exception){
+//				System.out.println(TAG + " could not connect with network");
+//				exception.printStackTrace();
+//			}
+
+			while(!done){
+				// Receive data from client
+				Object object = inputStream.readObject();
+				if (isSendable(object)){
+					sendable = (Sendable) object;
 					passToNetwork(sendable);
 					sleep(1000);
+				} else{
+					Byte terminate = (Byte)object;
+					if (terminate == -1 ){
+						passToNetwork(terminate);
+						done = true;
+					}
 				}
-			}catch(Exception exception){
-				System.out.println(TAG + " could not connect with network");
-				exception.printStackTrace();
 			}
 		}catch(Exception exception){
-			exception.printStackTrace();
-			System.out.println(TAG + "Disconnected from Network");
+//			exception.printStackTrace();
+//			System.out.println(TAG + "Disconnected from Network");
 		}
 		finally{
 			// Close the connection
@@ -62,7 +72,23 @@ public class Handler extends Thread{
 		}
 	}
 
+	public void sendTerminateMessage(Byte terminate){
+		try{
+			outputStream.writeObject(terminate);
+		}catch (IOException ioException){
+
+		}
+	}
+
+	private boolean isSendable(Object object){
+		return object instanceof Sendable;
+	}
+
 	private void passToNetwork(Sendable sendable){
 		network.getInstance().sendToDestination(sendable,this);
+	}
+
+	private void passToNetwork(Byte terminate){
+		network.getInstance().sendToDestination(terminate,this);
 	}
 }
