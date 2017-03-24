@@ -5,11 +5,10 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 /**
- * The <code>sender</code> seuses rdt3.0 protocols to send <code>Packet</code>s
+ * The <code>sender</code> uses rdt3.0 protocols to send <code>Packet</code>s
  * to the <code>receiver</code>. The <code>Packet</code>s are created by reading in
  * from a text file.
  */
-// TODO add comments for currentPacket and lastpacket sequence and update syouts
 public class sender{
 private static final String TAG = "Sender> ";			// Tag used for debugging
 	private static InetAddress network;					// The IP Adress of the network
@@ -20,7 +19,6 @@ private static final String TAG = "Sender> ";			// Tag used for debugging
 	private static int currentPacket = 0;				// Current packet being sent from the packetList
 	private static int lastPacketSequence = 0;			// Most recent packet seq# that was sent
 	private static int totalPacketsSent = 0;			// The total number of packets sent
-	private static boolean terminatingChar = false;		// Terminating char '.' (Assignment requirement)
 	private static boolean lastMessageSent = false;		// True if all packets have been sent successfully
 	private static HashMap<Integer,String> packetMap;	// Mapping of output message for corresponding ACK
 	private static String actionTaken;					// Holds the message taken by sender
@@ -63,7 +61,7 @@ private static final String TAG = "Sender> ";			// Tag used for debugging
 		fileScanner = new Scanner(inputFile);						// Create scanner given the file
 
 		packetList = new ArrayList<>();								// Create list to hold packets
-		while (fileScanner.hasNext()){
+		while (fileScanner.hasNext()){								// While there are words in the file
 			String content = fileScanner.next();					// Get the next String
 
 			// Create the packet

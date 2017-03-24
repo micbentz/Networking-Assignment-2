@@ -2,28 +2,25 @@ import java.net.*;
 import java.io.*;
 
 /**
-* Returns a proper ACK after receiving a packet (Refer to HW2)
-* Sends back ACK0 or ACK1 to handle PASS or CORRUPT
+ * The <code>recever</code> uses rdt3.0 receiver protocols to send the ACK of the
+ * last correctly (intact && correct seq#) packet.
 */
-// TODO add check if message contains "." if it does the entire message has been received and needs to be printed
-// TODO bug if starts with a drop or corrupt
 public class receiver{
-	private static final String TAG = "Receiver> receive: ";
-	private static int count = 0;
-	private static InetAddress network;
-	private static ObjectInputStream inputStream;
-	private static ObjectOutputStream outputStream;
+	private static final String TAG = "Receiver> receive: ";		// TAG used for debugging
+	private static InetAddress network;								// IP of the network
+	private static ObjectInputStream inputStream;					// Stream for reading Objects from Handler
+	private static ObjectOutputStream outputStream;					// Stream for writing Objects to Handler
 	private static int PORT;
-	private static int lastPacketReceived = 1;
-	private static int expectedSequence = 0;
-	private static int totalReceivedPackets = 0;
-	private static String completeMessage = "";
-	private static boolean done = false;
+	private static int lastPacketReceived = 1;						// Last received packet sequence
+	private static int expectedSequence = 0;						// Next expected packet sequence
+	private static int totalReceivedPackets = 0;					// Total amount of packets received
+	private static String completeMessage = "";						// Compiled contents of received packets
+	private static boolean done = false;							// Flag to terminate program
 
 	public static void main(String[] args){
 		try{
-			network = InetAddress.getByName(args[0]);
-			PORT = Integer.parseInt(args[1]);
+			network = InetAddress.getByName(args[0]);		// Get the IP
+			PORT = Integer.parseInt(args[1]);				// Get the Port
 		}catch(UnknownHostException exception){
 			System.out.println(TAG + "Network not found");
 			System.exit(1);
@@ -34,6 +31,7 @@ public class receiver{
 		communicateWithServer();
 	}
 
+	// Communicates with the Handler
 	private static void communicateWithServer(){
 		Object object = null;
 		Socket requestSocket = null;
@@ -41,6 +39,7 @@ public class receiver{
 		boolean isCorrupt = false;
 
 		try{
+			// Create socket
 			requestSocket = new Socket(network,PORT);
 
 			// Initialize inputStream and ObjectOutputStream
@@ -51,26 +50,33 @@ public class receiver{
 			outputStream.writeObject(new String("Receiver"));
 			while(!done) {
 				try{
+					// Read in the object
 					object = inputStream.readObject();
+
+					// If the object is a packet
 					if(isPacket(object)) {
 						packet = (Packet) object;
 
+						// If the packet is corrupt or an unexpected seq # is received
 						if (isCorrupt(packet) || unexpectedSequence(packet)) {
 							passAck(new ACK((byte) lastPacketReceived, (byte) 0));   // Pass the ACK of the last received sequence
-						} else {
+						} else { // The packet is correct
 							lastPacketReceived = packet.getSequenceNumber();        // Update the lastPacketReceived with packet seq #
-							passAck(new ACK((byte) lastPacketReceived, (byte) 0));  // Send ACK
 							expectedSequence = (expectedSequence + 1) % 2;          // Update the expectedSequence
 							completeMessage += packet.getContent() + " ";           // Append extracted content into message
+							passAck(new ACK((byte) lastPacketReceived, (byte) 0));  // Send ACK
 
 							// If the entire message has been received display it
 							if (checkEndofMessage(packet)) {
-								System.out.println("Sendable: " + completeMessage);
+								System.out.println("Message: " + completeMessage);
 							}
 						}
 						System.out.println("Waiting " + expectedSequence + ", " + ++totalReceivedPackets + ", " + packet.info() + ", " + "ACK" + lastPacketReceived);
-					}else {
-						done = true;
+					}else { // Object is termination message
+						Byte terminate = (Byte)object;  // Get the byte
+						if (terminate == -1 ){			// If it's equal to -1
+							done = true;
+						}
 					}
 
 				}catch (ClassNotFoundException notFound){
@@ -95,6 +101,7 @@ public class receiver{
 		}
 	}
 
+	// Checks if the object is a packet
 	private static boolean isPacket(Object object){
 		return object instanceof Packet;
 	}
@@ -126,9 +133,5 @@ public class receiver{
 	// Checks if the end of the message has been reached
 	private static boolean checkEndofMessage(Packet packet){
 		return packet.getContent().contains(".");
-	}
-
-	private static boolean lastAckReceived(Packet packet){
-		return packet.getContent() == "test";
 	}
 }

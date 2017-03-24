@@ -1,10 +1,14 @@
 import java.io.*;
 
+/**
+ * A <code>Packet</code> is the message sent from the sender to a receiver
+ */
+
 public class Packet implements Serializable, Sendable {
-	private final String TAG = "Packet.class";
-	private byte sequenceNumber;	// 1 byte, either 0 or 1
-	private byte ID;				// 1 byte position of the packet in the message, starts at 1
-	private int checkSum;			// 4 bytes
+	private final String TAG = "Packet.class";	// TAG used for debugging
+	private byte sequenceNumber;				// 1 byte, either 0 or 1
+	private byte ID;							// 1 byte position of the packet in the message, starts at 1
+	private int checkSum;						// 4 bytes
 	public String content;
 
 	public Packet(PacketBuilder builder){
@@ -32,16 +36,10 @@ public class Packet implements Serializable, Sendable {
 
 	public String info(){
 		String packetInfo;
-//		info = "sequenceNumber: " + sequenceNumber + ", ";
-//		info += "ID: " + ID + ", ";
-//		info += "checkSum: " + checkSum + ", ";
-//		info += "content: " + content;
-
 		packetInfo =  sequenceNumber + ", ";
 		packetInfo += ID + ", ";
 		packetInfo += checkSum + ", ";
 		packetInfo += content;
-
 		return packetInfo;
 	}
 

@@ -1,5 +1,9 @@
 import java.io.Serializable;
 
+/**
+ * A <code>ACK</code> is the message sent from the receiver to the sender
+ */
+
 public class ACK implements Serializable, Sendable {
 	private final String TAG = "ACK.class";
 	private byte sequenceNumber;		// 1 byte
@@ -31,9 +35,6 @@ public class ACK implements Serializable, Sendable {
 	@Override
 	public String toString(){
 		String contents;
-//		contents = "sequence number: " + sequenceNumber + '\t';
-//		contents += "checksumValue: " + checksumValue + '\t';
-
 		contents = "ACK" + sequenceNumber + ", ";
 		return contents;
 	}

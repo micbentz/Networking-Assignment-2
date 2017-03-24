@@ -8,6 +8,7 @@ import java.io.*;
  * and <code>receiver</code>. The network creates a <code>Handler</code> thread
  * for both sender and receiver.
  */
+
 public class network{
 	private static network instance = null;					// single instance of
 	private static final String TAG = "Network> ";			// TAG used for debugging
@@ -16,7 +17,7 @@ public class network{
 	private static HashMap<Handler,Handler> destinationMap;	// Map to create a pairing between the Handlers
 	private static int PORT;								// PORT
 	private static int clientCount = 0;						// # of clients connected i.e. receiver & sender
-	private static boolean done = false;
+	private static boolean done = false;					// Flag to stop the network
 
 	// Synchronized getInstance() allows the network to be shared by both Handlers
 	public synchronized static network getInstance(){
@@ -49,9 +50,9 @@ public class network{
 				if (clientCount == 2){
 					createPairing();
 				} else {
-					Socket client = listener.accept();                // Wait until connection attempt is made and accept
+					Socket client = listener.accept();              // Wait until connection attempt is made and accept
 					Handler clientHandler = new Handler(client);    // Create a Handler and pass the client socket
-					clientHandler.start();                            // Start the Handler thread
+					clientHandler.start();                          // Start the Handler thread
 
 					// Add the handler and increment count
 					handlers[clientCount] = clientHandler;
@@ -116,7 +117,7 @@ public class network{
 	public void corruptData(Sendable sendable, Handler destination){
 		Sendable copy = sendable.clone();	// Clone the sendable so that it's original contents aren't changed
 		copy.corruptData();					// Corrupt the data
-		destination.sendMessage(copy);
+		destination.sendMessage(copy);		// Send the corrupted message
 	}
 
 	// Drops the message and sends ACK2 to the Sender Handler
